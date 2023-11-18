@@ -44,7 +44,7 @@ func NewKafka(sasl bool, hosts, username, password string, datadogEnable bool) (
 	}, nil
 }
 
-func (k *Kafka) ConsumeMessage(ctx context.Context, groupId, topic, consumerId string, messages chan<- *kafka.Message, errChan chan<- error) (*kafkatrace.Reader, error) {
+func (k *Kafka) ConsumeMessage(ctx context.Context, groupId, topic string, messages chan<- *kafka.Message, errChan chan<- error) (*kafkatrace.Reader, error) {
 	config := kafka.ReaderConfig{}
 	config.Brokers = k.brokers
 	config.GroupID = groupId
