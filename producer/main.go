@@ -32,18 +32,22 @@ func main() {
 	fmt.Println(kafka)
 
 	var wg sync.WaitGroup
-	for i := 0; i < 1000; i++ {
+	for i := 0; i < 100000; i++ {
 		wg.Add(1)
 		i := i
 		go func() {
 			defer wg.Done()
-			sendMessage(kafka, i)
+			err := kafka.SendMessage(context.Background(), "test", []byte(fmt.Sprintf("mantap gan baru %d", i)))
+			if err != nil {
+				log.Fatal(err)
+			}
 		}()
 	}
-	time.Sleep(3 * time.Second)
 
-	// err = kafka.SendMessageWithAutoTopicCreation(context.Background(), "test", []byte(fmt.Sprintf("mantap gan %d", 1)))
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
+	err = kafka.SendMessage(context.Background(), "test", []byte("halo gan!"))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	time.Sleep(5 * time.Second)
 }

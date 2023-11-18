@@ -22,8 +22,6 @@ func NewKafka(sasl bool, hosts, username, password string, datadogEnable bool) (
 	config := kafka.WriterConfig{}
 	config.Brokers = strings.Split(hosts, ",")
 	config.Balancer = &kafka.LeastBytes{}
-	config.BatchSize = 1
-	config.BatchTimeout = 50 * time.Millisecond
 	config.RequiredAcks = 1
 	if sasl {
 		mechanism, err := scram.Mechanism(scram.SHA512, username, password)
@@ -44,6 +42,7 @@ func NewKafka(sasl bool, hosts, username, password string, datadogEnable bool) (
 }
 
 func (k *Kafka) SendMessage(ctx context.Context, topic string, value []byte) error {
+	fmt.Printf("send message to topic %s: %s\n", topic, string(value))
 	return k.writer.WriteMessages(ctx, kafka.Message{
 		Topic: topic,
 		Value: value,
@@ -57,7 +56,6 @@ func (k *Kafka) SendMessageWithAutoTopicCreation(ctx context.Context, topic stri
 		ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 		defer cancel()
 
-		fmt.Printf("send message to topic %s: %s\n", topic, string(value))
 		err = k.writer.WriteMessages(ctx, kafka.Message{
 			Topic: topic,
 			Value: value,
@@ -73,6 +71,7 @@ func (k *Kafka) SendMessageWithAutoTopicCreation(ctx context.Context, topic stri
 		break
 	}
 
+	fmt.Printf("send message (with topic creation) to topic %s: %s\n", topic, string(value))
 	return nil
 }
 
