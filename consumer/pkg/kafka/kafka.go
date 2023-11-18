@@ -3,8 +3,8 @@ package kafka
 import (
 	"context"
 	"fmt"
+	"log"
 	"strings"
-	"time"
 
 	"github.com/pkg/errors"
 	"github.com/segmentio/kafka-go"
@@ -13,8 +13,11 @@ import (
 )
 
 type Kafka struct {
-	writer  *kafkatrace.Writer
-	brokers []string
+	writer   *kafkatrace.Writer
+	sasl     bool
+	brokers  []string
+	username string
+	password string
 }
 
 func NewKafka(sasl bool, hosts, username, password string, datadogEnable bool) (*Kafka, error) {
@@ -35,59 +38,42 @@ func NewKafka(sasl bool, hosts, username, password string, datadogEnable bool) (
 	writer.AllowAutoTopicCreation = true
 
 	return &Kafka{
-		writer:  writer,
-		brokers: strings.Split(hosts, ","),
+		writer:   writer,
+		sasl:     sasl,
+		brokers:  strings.Split(hosts, ","),
+		username: username,
+		password: password,
 	}, nil
 }
 
-func (k *Kafka) SendMessage(ctx context.Context, topic string, value []byte) error {
-	return k.writer.WriteMessages(ctx, kafka.Message{
-		Topic: topic,
-		Value: value,
-	})
-}
+func (k *Kafka) ConsumeMessage(ctx context.Context, groupId, topic, consumerId string) error {
+	config := kafka.ReaderConfig{}
+	config.Brokers = k.brokers
+	config.GroupID = groupId
+	config.Topic = topic
+	config.MaxBytes = 10e6
 
-func (k *Kafka) SendMessageWithAutoTopicCreation(ctx context.Context, topic string, value []byte) error {
-	var err error
-	const retries = 3
-	for i := 0; i < retries; i++ {
-		ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
-		defer cancel()
-
-		err = k.writer.WriteMessages(ctx, kafka.Message{
-			Topic: topic,
-			Value: value,
-		})
-		if errors.Is(err, kafka.LeaderNotAvailable) || errors.Is(err, context.DeadlineExceeded) {
-			time.Sleep(time.Millisecond * 250)
-			continue
-		}
-
+	if k.sasl {
+		mechanism, err := scram.Mechanism(scram.SHA512, k.username, k.password)
 		if err != nil {
-			return err
+			return errors.WithStack(err)
 		}
-		break
+
+		config.Dialer = &kafka.Dialer{SASLMechanism: mechanism}
 	}
 
-	return nil
-}
-
-func (k *Kafka) ConsumeMessage(ctx context.Context, groupId, topic, consumerId string) error {
-	reader := kafkatrace.NewReader(kafka.ReaderConfig{
-		Brokers:  k.brokers,
-		GroupID:  groupId,
-		Topic:    topic,
-		MaxBytes: 10e6,
-	})
+	reader := kafkatrace.NewReader(config, kafkatrace.WithServiceName("spbe-perizinan-event-kafka"))
 
 	var err error
 	for {
 		m, err := reader.FetchMessage(ctx)
 		if err != nil {
+			log.Println(err)
 			break
 		}
-		fmt.Printf("message at consumerId/topic/partition/offset %s/%v/%v/%v: %s = %s\n", consumerId, m.Topic, m.Partition, m.Offset, string(m.Key), string(m.Value))
+		fmt.Printf("message at consumerId:%s topic:%v partition:%v offset:%v message:%s\n", consumerId, m.Topic, m.Partition, m.Offset, string(m.Value))
 		if err := reader.CommitMessages(ctx, m); err != nil {
+			log.Println(err)
 			break
 		}
 	}

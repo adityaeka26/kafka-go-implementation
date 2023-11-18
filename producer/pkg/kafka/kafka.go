@@ -13,8 +13,11 @@ import (
 )
 
 type Kafka struct {
-	writer  *kafkatrace.Writer
-	brokers []string
+	writer   *kafkatrace.Writer
+	sasl     bool
+	brokers  []string
+	username string
+	password string
 }
 
 func NewKafka(sasl bool, hosts, username, password string, datadogEnable bool) (*Kafka, error) {
@@ -22,7 +25,6 @@ func NewKafka(sasl bool, hosts, username, password string, datadogEnable bool) (
 	config := kafka.WriterConfig{}
 	config.Brokers = strings.Split(hosts, ",")
 	config.Balancer = &kafka.LeastBytes{}
-	config.RequiredAcks = 1
 	if sasl {
 		mechanism, err := scram.Mechanism(scram.SHA512, username, password)
 		if err != nil {
@@ -36,8 +38,11 @@ func NewKafka(sasl bool, hosts, username, password string, datadogEnable bool) (
 	writer.AllowAutoTopicCreation = true
 
 	return &Kafka{
-		writer:  writer,
-		brokers: strings.Split(hosts, ","),
+		writer:   writer,
+		sasl:     sasl,
+		brokers:  strings.Split(hosts, ","),
+		username: username,
+		password: password,
 	}, nil
 }
 
@@ -73,29 +78,6 @@ func (k *Kafka) SendMessageWithAutoTopicCreation(ctx context.Context, topic stri
 
 	fmt.Printf("send message (with topic creation) to topic %s: %s\n", topic, string(value))
 	return nil
-}
-
-func (k *Kafka) ConsumeMessage(ctx context.Context, groupId, topic string) error {
-	reader := kafkatrace.NewReader(kafka.ReaderConfig{
-		Brokers:  k.brokers,
-		GroupID:  groupId,
-		Topic:    topic,
-		MaxBytes: 10e6,
-	})
-
-	var err error
-	for {
-		m, err := reader.FetchMessage(ctx)
-		if err != nil {
-			break
-		}
-		fmt.Printf("message at topic/partition/offset %v/%v/%v: %s = %s\n", m.Topic, m.Partition, m.Offset, string(m.Key), string(m.Value))
-		if err := reader.CommitMessages(ctx, m); err != nil {
-			break
-		}
-	}
-
-	return err
 }
 
 func (k *Kafka) Close(ctx context.Context) error {
