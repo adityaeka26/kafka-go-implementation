@@ -1,7 +1,7 @@
 package main
 
 import (
-	"test-kraft/consumer/cmd"
+	"kafka-go-implementation-consumer/cmd"
 )
 
 func main() {

@@ -2,11 +2,11 @@ package cmd
 
 import (
 	"fmt"
+	"kafka-go-implementation-consumer/cmd/rest"
+	"kafka-go-implementation-consumer/config"
+	"kafka-go-implementation-consumer/internal/handler"
+	pkgKafka "kafka-go-implementation-consumer/pkg/kafka"
 	"log"
-	"test-kraft/consumer/cmd/rest"
-	"test-kraft/consumer/config"
-	"test-kraft/consumer/internal/handler"
-	pkgKafka "test-kraft/consumer/pkg/kafka"
 )
 
 func Execute() {

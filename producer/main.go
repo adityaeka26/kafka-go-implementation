@@ -24,7 +24,7 @@ func main() {
 	fmt.Println(kafka)
 
 	var wg sync.WaitGroup
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 1000; i++ {
 		wg.Add(1)
 		i := i
 		go func() {
@@ -36,5 +36,5 @@ func main() {
 		}()
 	}
 
-	time.Sleep(15 * time.Second)
+	time.Sleep(5 * time.Second)
 }

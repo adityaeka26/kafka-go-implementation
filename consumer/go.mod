@@ -1,4 +1,4 @@
-module test-kraft/consumer
+module kafka-go-implementation-consumer
 
 go 1.21.4
 

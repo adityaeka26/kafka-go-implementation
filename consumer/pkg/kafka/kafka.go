@@ -2,8 +2,6 @@ package kafka
 
 import (
 	"context"
-	"fmt"
-	"log"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -46,17 +44,17 @@ func NewKafka(sasl bool, hosts, username, password string, datadogEnable bool) (
 	}, nil
 }
 
-func (k *Kafka) ConsumeMessage(ctx context.Context, groupId, topic, consumerId string) error {
+func (k *Kafka) ConsumeMessage(ctx context.Context, groupId, topic, consumerId string, messages chan<- *kafka.Message, errChan chan<- error) (*kafkatrace.Reader, error) {
 	config := kafka.ReaderConfig{}
 	config.Brokers = k.brokers
 	config.GroupID = groupId
 	config.Topic = topic
-	config.MaxBytes = 10e6
 
 	if k.sasl {
 		mechanism, err := scram.Mechanism(scram.SHA512, k.username, k.password)
 		if err != nil {
-			return errors.WithStack(err)
+			errChan <- err
+			return nil, err
 		}
 
 		config.Dialer = &kafka.Dialer{SASLMechanism: mechanism}
@@ -64,21 +62,22 @@ func (k *Kafka) ConsumeMessage(ctx context.Context, groupId, topic, consumerId s
 
 	reader := kafkatrace.NewReader(config, kafkatrace.WithServiceName("spbe-perizinan-event-kafka"))
 
-	var err error
-	for {
-		m, err := reader.FetchMessage(ctx)
-		if err != nil {
-			log.Println(err)
-			break
+	go func() {
+		defer close(messages)
+		defer close(errChan)
+		for {
+			m, err := reader.FetchMessage(ctx)
+			// err = errors.New("asd")
+			if err != nil {
+				errChan <- err
+				continue
+			}
+			messages <- &m
+			// fmt.Printf("message at consumerId:%s topic:%s partition:%v offset:%v message:%s\n", consumerId, m.Topic, m.Partition, m.Offset, string(m.Value))
 		}
-		fmt.Printf("message at consumerId:%s topic:%v partition:%v offset:%v message:%s\n", consumerId, m.Topic, m.Partition, m.Offset, string(m.Value))
-		if err := reader.CommitMessages(ctx, m); err != nil {
-			log.Println(err)
-			break
-		}
-	}
+	}()
 
-	return err
+	return reader, nil
 }
 
 func (k *Kafka) Close(ctx context.Context) error {

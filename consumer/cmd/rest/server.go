@@ -3,7 +3,7 @@ package rest
 import (
 	"fmt"
 
-	"test-kraft/consumer/config"
+	"kafka-go-implementation-consumer/config"
 
 	"github.com/gofiber/fiber/v2"
 )
