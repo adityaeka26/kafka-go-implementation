@@ -11,7 +11,7 @@ import (
 func ServeREST(config *config.EnvConfig) error {
 	app := fiber.New()
 
-	app.Get("/test", func(c *fiber.Ctx) error {
+	app.Get("/", func(c *fiber.Ctx) error {
 		return c.SendString("Hello, World 👋!")
 	})
 

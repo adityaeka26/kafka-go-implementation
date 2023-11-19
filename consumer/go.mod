@@ -4,6 +4,7 @@ go 1.21.4
 
 require (
 	github.com/gofiber/fiber/v2 v2.50.0
+	github.com/kr/pretty v0.3.1
 	github.com/pkg/errors v0.9.1
 	github.com/segmentio/kafka-go v0.4.45
 	github.com/spf13/viper v1.17.0
@@ -28,6 +29,7 @@ require (
 	github.com/google/uuid v1.3.1 // indirect
 	github.com/hashicorp/hcl v1.0.1-vault-5 // indirect
 	github.com/klauspost/compress v1.17.1 // indirect
+	github.com/kr/text v0.2.0 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
@@ -38,6 +40,7 @@ require (
 	github.com/philhofer/fwd v1.1.2 // indirect
 	github.com/pierrec/lz4/v4 v4.1.18 // indirect
 	github.com/rivo/uniseg v0.4.4 // indirect
+	github.com/rogpeppe/go-internal v1.9.0 // indirect
 	github.com/sagikazarmark/locafero v0.3.0 // indirect
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
 	github.com/secure-systems-lab/go-securesystemslib v0.7.0 // indirect

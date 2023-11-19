@@ -5,6 +5,8 @@ import (
 	"kafka-go-implementation-consumer/cmd/rest"
 	"kafka-go-implementation-consumer/config"
 	"kafka-go-implementation-consumer/internal/handler"
+	"kafka-go-implementation-consumer/internal/repository"
+	"kafka-go-implementation-consumer/internal/usecase"
 	pkgKafka "kafka-go-implementation-consumer/pkg/kafka"
 	"log"
 )
@@ -27,7 +29,10 @@ func Execute() {
 	}
 	fmt.Println(kafka)
 
-	handler.InitEventHandler(kafka)
+	consumerRepository := repository.NewConsumerRepository()
+	consumerUsecase := usecase.NewConsumerUsecase(consumerRepository)
+
+	handler.InitEventHandler(kafka, consumerUsecase)
 
 	if err := rest.ServeREST(config); err != nil {
 		log.Fatal(err)
