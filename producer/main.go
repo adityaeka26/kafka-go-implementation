@@ -45,7 +45,7 @@ func main() {
 				log.Println(err)
 			}
 
-			err = kafka.SendMessage(context.Background(), "test-topic-2", messageByte)
+			err = kafka.SendMessageWithAutoTopicCreation(context.Background(), "test-topic-10", messageByte)
 			if err != nil {
 				log.Println(err)
 			}
