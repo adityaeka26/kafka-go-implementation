@@ -30,7 +30,7 @@ func (h *eventHandler) TestTopic() {
 	errors := make(chan error)
 	ctx := context.Background()
 
-	reader, err := h.kafka.ConsumeMessage(ctx, "test-group-consumer-id", "test-topic-2", messages, errors)
+	reader, err := h.kafka.ConsumeMessage(ctx, "test-group-consumer-id", "test-topic-10", messages, errors)
 	if err != nil {
 		log.Println(err)
 	}
